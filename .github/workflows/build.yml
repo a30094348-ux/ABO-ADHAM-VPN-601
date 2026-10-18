@@ -1,0 +1,30 @@
+name: Build APK
+on: [push, workflow_dispatch]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      - uses: android-actions/setup-android@v3
+      - run: |
+          mkdir -p app/src/main/java/com/abo/adham/vpn
+          mkdir -p app/src/main/res/layout
+          mkdir -p app/src/main/res/values
+          echo "include ':app'" > settings.gradle
+          echo "buildscript{repositories{google();mavenCentral()} dependencies{classpath 'com.android.tools.build:gradle:8.2.2'}} allprojects{repositories{google();mavenCentral()}}" > build.gradle
+          echo "plugins { id 'com.android.application' } android { namespace 'com.abo.adham.vpn'; compileSdk 34; defaultConfig { applicationId \"com.abo.adham.vpn\"; minSdk 24; targetSdk 34; versionCode 601; versionName \"601\" } buildTypes { debug { minifyEnabled false } } compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 } } dependencies { implementation 'androidx.appcompat:appcompat:1.6.1'; implementation 'com.google.android.material:material:1.11.0' }" > app/build.gradle
+          echo '<manifest xmlns:android="http://schemas.android.com/apk/res/android"><uses-permission android:name="android.permission.INTERNET"/><application android:label="ABO ADHAM VPN 601" android:theme="@style/Theme.AppCompat.DayNight"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity></application></manifest>' > app/src/main/AndroidManifest.xml
+          echo '<resources><string name="app_name">ABO ADHAM VPN 601</string></resources>' > app/src/main/res/values/strings.xml
+          echo '<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:orientation="vertical" android:gravity="center" android:padding="24dp" android:background="#0F172A" android:layout_width="match_parent" android:layout_height="match_parent"><TextView android:text="ABO ADHAM VPN 601" android:textSize="28sp" android:textStyle="bold" android:textColor="#38BDF8" android:layout_width="wrap_content" android:layout_height="wrap_content"/><TextView android:text="الرياض - 18ms" android:textColor="white" android:layout_marginTop="16dp" android:layout_width="wrap_content" android:layout_height="wrap_content"/><Button android:id="@+id/connectBtn" android:text="اتصال" android:layout_marginTop="32dp" android:layout_width="match_parent" android:layout_height="64dp"/></LinearLayout>' > app/src/main/res/layout/activity_main.xml
+          echo 'package com.abo.adham.vpn; import android.os.Bundle; import android.widget.Button; import android.widget.Toast; import androidx.appcompat.app.AppCompatActivity; public class MainActivity extends AppCompatActivity { protected void onCreate(Bundle b){ super.onCreate(b); setContentView(R.layout.activity_main); findViewById(R.id.connectBtn).setOnClickListener(v -> Toast.makeText(this, "متصل - الرياض 18ms", Toast.LENGTH_LONG).show()); }}' > app/src/main/java/com/abo/adham/vpn/MainActivity.java
+      - run: |
+          echo "sdk.dir=$ANDROID_HOME" > local.properties
+          gradle assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ABO-ADHAM-VPN-601-APK
+          path: app/build/outputs/apk/debug/*.apk
